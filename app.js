@@ -1,0 +1,455 @@
+/*
+ * Darts TV Guide — app logic.
+ *
+ * Renders the curated tournament calendar (data.js) and overlays live
+ * broadcast data pulled on demand from Sky's public EPG, which carries
+ * listings for ALL UK channels (Sky Sports, ITV4, S4C...) about 8 days ahead.
+ * That EPG is the source of truth for which Sky channel a session actually
+ * airs on — Sky only locks this in close to the day.
+ */
+
+'use strict';
+
+const EPG_BASE = 'https://awk.epgsky.com/hawk/linear';
+const EPG_REGION = '4101/1'; // London bouquet — channel line-up is national for sport
+const EPG_DAYS = 8;
+const CACHE_KEY = 'dartsEpgCache.v1';
+const CACHE_MAX_AGE_MS = 6 * 60 * 60 * 1000; // auto-refresh if older than 6h
+
+// Channels we always scan (sid → display name). The services list is also
+// searched at refresh time for pop-up channels (e.g. "Sky Sports Darts") and S4C.
+const BASE_CHANNELS = {
+  '4002': 'Sky Sports Main Event',
+  '4022': 'Sky Sports Action',
+  '4090': 'Sky Sports Mix',
+  '3940': 'Sky Sports+',
+  '6534': 'ITV4',
+};
+
+const CATEGORIES = {
+  'major': { label: 'Major', cls: 'cat-major' },
+  'premier-league': { label: 'Premier League', cls: 'cat-pl' },
+  'european-tour': { label: 'Euro Tour', cls: 'cat-et' },
+  'world-series': { label: 'World Series', cls: 'cat-ws' },
+  'wdf-modus': { label: 'WDF / MODUS', cls: 'cat-wdf' },
+};
+
+const fmtTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
+const fmtDayShort = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', weekday: 'short', day: 'numeric', month: 'short' });
+const fmtIsoDate = new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London' }); // YYYY-MM-DD
+
+let epg = null;          // { fetchedAt, channels: {sid:name}, programmes: [...] }
+let activeFilter = 'all';
+
+// ---------------------------------------------------------------------------
+// EPG fetching
+// ---------------------------------------------------------------------------
+
+function prettifyChannelName(raw) {
+  return raw
+    .replace(/\bHD\b/g, '')
+    .replace(/SkySp(orts)?/, 'Sky Sports ')
+    .replace('MainEv', 'Main Event')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+async function fetchJson(url) {
+  const res = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!res.ok) throw new Error(`EPG request failed (${res.status})`);
+  return res.json();
+}
+
+async function discoverChannels() {
+  const channels = { ...BASE_CHANNELS };
+  try {
+    const data = await fetchJson(`${EPG_BASE}/services/${EPG_REGION}`);
+    for (const svc of data.services || []) {
+      const name = svc.t || '';
+      // Pop-up darts channel (appears during the Worlds) and S4C for Lakeside.
+      if (/darts/i.test(name)) channels[svc.sid] = prettifyChannelName(name);
+      if (/^S4C/i.test(name) && !Object.values(channels).includes('S4C')) channels[svc.sid] = 'S4C';
+    }
+  } catch (err) {
+    console.warn('Channel discovery failed, using base channel list', err);
+  }
+  return channels;
+}
+
+function epgDateParam(offsetDays) {
+  const d = new Date(Date.now() + offsetDays * 86400000);
+  return fmtIsoDate.format(d).replace(/-/g, '');
+}
+
+async function fetchEpg() {
+  const channels = await discoverChannels();
+  const sids = Object.keys(channels);
+  const programmes = [];
+
+  const dayFetches = [];
+  for (let day = 0; day < EPG_DAYS; day++) {
+    dayFetches.push(
+      fetchJson(`${EPG_BASE}/schedule/${epgDateParam(day)}/${sids.join(',')}`)
+        .then((data) => {
+          for (const sch of data.schedule || []) {
+            for (const ev of sch.events || []) {
+              const title = ev.t || '';
+              if (!/dart/i.test(title)) continue;
+              programmes.push({
+                sid: sch.sid,
+                channel: channels[sch.sid] || sch.sid,
+                title,
+                synopsis: ev.sy || '',
+                start: ev.st * 1000,
+                end: (ev.st + ev.d) * 1000,
+                live: /^live\b/i.test(title),
+              });
+            }
+          }
+        })
+        .catch((err) => console.warn(`EPG day ${day} failed`, err))
+    );
+  }
+  await Promise.all(dayFetches);
+
+  // Dedupe identical entries (same channel, start, title) across day boundaries.
+  const seen = new Set();
+  const unique = programmes.filter((p) => {
+    const key = `${p.sid}|${p.start}|${p.title}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+  unique.sort((a, b) => a.start - b.start);
+
+  return { fetchedAt: Date.now(), channels, programmes: unique };
+}
+
+async function refresh(manual) {
+  const btn = document.getElementById('refreshBtn');
+  btn.classList.add('spinning');
+  btn.disabled = true;
+  setStatus('Checking TV listings…');
+  try {
+    epg = await fetchEpg();
+    localStorage.setItem(CACHE_KEY, JSON.stringify(epg));
+    renderAll();
+  } catch (err) {
+    console.error(err);
+    setStatus(manual ? 'Couldn’t reach the TV guide — check your connection.' : '');
+    renderAll();
+  } finally {
+    btn.classList.remove('spinning');
+    btn.disabled = false;
+  }
+}
+
+function setStatus(text) {
+  document.getElementById('statusLine').textContent = text;
+}
+
+function updatedLabel() {
+  if (!epg) return 'TV listings not loaded yet — tap Refresh.';
+  const mins = Math.round((Date.now() - epg.fetchedAt) / 60000);
+  const when = mins < 1 ? 'just now' : mins < 60 ? `${mins} min ago` : `${Math.round(mins / 60)} h ago`;
+  return `TV listings updated ${when}`;
+}
+
+// ---------------------------------------------------------------------------
+// Matching EPG programmes to tournament sessions
+// ---------------------------------------------------------------------------
+
+function programmesForTournament(t) {
+  if (!epg || !t.epgKeywords || !t.epgKeywords.length) return [];
+  return epg.programmes.filter((p) => {
+    const title = p.title.toLowerCase();
+    return t.epgKeywords.some((k) => title.includes(k));
+  });
+}
+
+// Programmes whose London-date matches the session date.
+function confirmationsForSession(tournamentProgrammes, sessionDate) {
+  const matches = tournamentProgrammes.filter(
+    (p) => p.live && fmtIsoDate.format(new Date(p.start)) === sessionDate
+  );
+  // For a session at 18:00 vs one at 12:00 on the same day, pick programmes
+  // by proximity later — here we just group all of that day's live airings.
+  return matches;
+}
+
+// Pick the airing(s) closest to the session start time; simulcasts share a start.
+function airingsNearTime(dayProgrammes, sessionDate, sessionTime) {
+  if (!dayProgrammes.length) return [];
+  const target = new Date(`${sessionDate}T${sessionTime || '12:00'}:00`).getTime();
+  let best = Infinity;
+  for (const p of dayProgrammes) best = Math.min(best, Math.abs(p.start - target));
+  // Keep airings starting within 90 min of the closest one (captures simulcasts
+  // and build-up programmes that start slightly before the session).
+  const bestStart = dayProgrammes.find((p) => Math.abs(p.start - target) === best).start;
+  return dayProgrammes.filter((p) => Math.abs(p.start - bestStart) <= 90 * 60000);
+}
+
+// ---------------------------------------------------------------------------
+// Rendering
+// ---------------------------------------------------------------------------
+
+function el(tag, cls, text) {
+  const node = document.createElement(tag);
+  if (cls) node.className = cls;
+  if (text !== undefined) node.textContent = text;
+  return node;
+}
+
+function channelChip(name, live) {
+  const isSky = /sky/i.test(name);
+  const isItv = /itv/i.test(name);
+  const chip = el('span', 'chip ' + (isSky ? 'chip-sky' : isItv ? 'chip-itv' : 'chip-other'), name);
+  if (live) chip.classList.add('chip-live');
+  return chip;
+}
+
+function renderOnAir() {
+  const box = document.getElementById('onAir');
+  box.innerHTML = '';
+  if (!epg) { box.hidden = true; return; }
+  const now = Date.now();
+  const current = epg.programmes.filter((p) => p.live && p.start <= now && now < p.end);
+  if (!current.length) { box.hidden = true; return; }
+
+  box.hidden = false;
+  const byTitle = new Map();
+  for (const p of current) {
+    if (!byTitle.has(p.title)) byTitle.set(p.title, []);
+    byTitle.get(p.title).push(p);
+  }
+  for (const [title, airings] of byTitle) {
+    const row = el('div', 'onair-row');
+    row.append(el('span', 'live-dot'));
+    const info = el('div', 'onair-info');
+    info.append(el('div', 'onair-title', title.replace(/^Live\s*/i, '')));
+    const chips = el('div', 'chips');
+    for (const a of airings) {
+      const chip = channelChip(a.channel, true);
+      chip.textContent += ` · until ${fmtTime.format(new Date(a.end))}`;
+      chips.append(chip);
+    }
+    info.append(chips);
+    row.append(info);
+    box.append(row);
+  }
+}
+
+function renderListings() {
+  const box = document.getElementById('listings');
+  box.innerHTML = '';
+  if (!epg || !epg.programmes.length) {
+    box.append(el('p', 'muted', epg
+      ? 'No darts found in the TV listings for the next 8 days.'
+      : 'Tap Refresh to pull live TV listings.'));
+    return;
+  }
+
+  const todayIso = fmtIsoDate.format(new Date());
+  const tomorrowIso = fmtIsoDate.format(new Date(Date.now() + 86400000));
+  const byDay = new Map();
+  for (const p of epg.programmes) {
+    if (p.end < Date.now()) continue; // drop finished programmes
+    const day = fmtIsoDate.format(new Date(p.start));
+    if (!byDay.has(day)) byDay.set(day, []);
+    byDay.get(day).push(p);
+  }
+
+  for (const [day, progs] of byDay) {
+    const dayName = day === todayIso ? 'Today' : day === tomorrowIso ? 'Tomorrow'
+      : fmtDayShort.format(new Date(day + 'T12:00:00'));
+    box.append(el('h3', 'day-head', dayName));
+
+    // Group simulcasts: same title + same start.
+    const groups = new Map();
+    for (const p of progs) {
+      const key = `${p.start}|${p.title}`;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(p);
+    }
+    for (const airings of groups.values()) {
+      const p = airings[0];
+      const row = el('div', 'listing-row' + (p.live ? '' : ' listing-rerun'));
+      const time = el('div', 'listing-time', fmtTime.format(new Date(p.start)));
+      const info = el('div', 'listing-info');
+      const title = el('div', 'listing-title', p.title.replace(/^Live\s*/i, ''));
+      if (p.live) title.prepend(el('span', 'badge badge-live', 'LIVE'));
+      info.append(title);
+      const chips = el('div', 'chips');
+      for (const a of airings) chips.append(channelChip(a.channel, a.live));
+      info.append(chips);
+      row.append(time, info);
+      box.append(row);
+    }
+  }
+}
+
+function sessionRow(session, tournamentProgrammes) {
+  const row = el('div', 'session-row');
+  const d = new Date(session.date + 'T12:00:00');
+  row.append(el('div', 'session-date', fmtDayShort.format(d)));
+
+  const info = el('div', 'session-info');
+  const top = el('div', 'session-label');
+  top.textContent = `${session.time !== 'TBC' ? session.time + ' — ' : ''}${session.label}`;
+  info.append(top);
+
+  const dayProgs = confirmationsForSession(tournamentProgrammes, session.date);
+  const airings = airingsNearTime(dayProgs, session.date, session.time);
+
+  const chips = el('div', 'chips');
+  if (airings.length) {
+    chips.append(el('span', 'badge badge-confirmed', '✓ TV guide'));
+    for (const a of airings) {
+      const chip = channelChip(a.channel, true);
+      chip.textContent += ` ${fmtTime.format(new Date(a.start))}`;
+      chips.append(chip);
+    }
+  } else if (session.status === 'expected') {
+    chips.append(el('span', 'badge badge-expected', 'expected time'));
+  }
+  if (chips.childNodes.length) info.append(chips);
+
+  row.append(info);
+  if (session.date < fmtIsoDate.format(new Date())) row.classList.add('session-past');
+  return row;
+}
+
+function tournamentCard(t) {
+  const card = el('article', 'card');
+  const todayIso = fmtIsoDate.format(new Date());
+  if (t.start <= todayIso && todayIso <= t.end && !t.ongoing) card.classList.add('card-active');
+
+  const head = el('div', 'card-head');
+  const titleWrap = el('div', 'card-titlewrap');
+  titleWrap.append(el('h2', 'card-title', t.name));
+
+  const meta = el('div', 'card-meta');
+  const startD = new Date(t.start + 'T12:00:00');
+  const endD = new Date(t.end + 'T12:00:00');
+  const dateRange = t.ongoing ? 'Most weeks, year-round'
+    : t.start === t.end ? fmtDayShort.format(startD)
+    : `${fmtDayShort.format(startD)} – ${fmtDayShort.format(endD)}`;
+  const place = [t.venue, t.city].filter((s) => s && s !== 'TBC' && s !== 'Various').join(', ') || t.city;
+  meta.textContent = `${dateRange} · ${place}`;
+  titleWrap.append(meta);
+  head.append(titleWrap);
+
+  const tags = el('div', 'card-tags');
+  const cat = CATEGORIES[t.category];
+  tags.append(el('span', 'tag ' + cat.cls, cat.label));
+  if (t.status === 'provisional') tags.append(el('span', 'badge badge-provisional', 'dates TBC'));
+  head.append(tags);
+  card.append(head);
+
+  const tvLine = el('div', 'tv-line');
+  tvLine.append(channelChip(t.tv.uk, false));
+  tvLine.append(el('span', 'tv-detail', t.tv.detail));
+  card.append(tvLine);
+
+  if (t.notes) card.append(el('p', 'card-notes', t.notes));
+
+  const tournamentProgrammes = programmesForTournament(t);
+
+  if (t.sessions && t.sessions.length) {
+    const details = document.createElement('details');
+    const upcoming = t.sessions.filter((s) => s.date >= todayIso).length;
+    const summary = el('summary', null,
+      `Sessions (${upcoming ? upcoming + ' upcoming' : t.sessions.length})`);
+    details.append(summary);
+    const wrap = el('div', 'sessions');
+    for (const s of t.sessions) wrap.append(sessionRow(s, tournamentProgrammes));
+    details.append(wrap);
+    const active = t.start <= todayIso && todayIso <= t.end;
+    if (active) details.open = true;
+    card.append(details);
+  }
+
+  return card;
+}
+
+function renderTournaments() {
+  const box = document.getElementById('tournaments');
+  box.innerHTML = '';
+  const todayIso = fmtIsoDate.format(new Date());
+
+  const visible = TOURNAMENTS
+    .filter((t) => t.end >= todayIso)
+    .filter((t) => activeFilter === 'all' || t.category === activeFilter)
+    .sort((a, b) => (a.ongoing ? 1 : b.ongoing ? -1 : a.start.localeCompare(b.start)));
+
+  if (!visible.length) {
+    box.append(el('p', 'muted', 'Nothing in this category over the next 12 months.'));
+    return;
+  }
+
+  let currentMonth = '';
+  for (const t of visible) {
+    if (!t.ongoing) {
+      const month = new Date(t.start + 'T12:00:00')
+        .toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'Europe/London' });
+      if (month !== currentMonth) {
+        currentMonth = month;
+        box.append(el('h2', 'month-head', month));
+      }
+    } else if (currentMonth !== 'ongoing') {
+      currentMonth = 'ongoing';
+      box.append(el('h2', 'month-head', 'Ongoing'));
+    }
+    box.append(tournamentCard(t));
+  }
+}
+
+function renderAll() {
+  setStatus(updatedLabel());
+  renderOnAir();
+  renderListings();
+  renderTournaments();
+  document.getElementById('reviewedLine').textContent =
+    `Tournament data last reviewed ${new Date(DATA_REVIEWED + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`;
+}
+
+// ---------------------------------------------------------------------------
+// Init
+// ---------------------------------------------------------------------------
+
+function initFilters() {
+  const bar = document.getElementById('filters');
+  const filters = [['all', 'All'], ['major', 'Majors'], ['premier-league', 'Premier League'],
+    ['european-tour', 'Euro Tour'], ['world-series', 'World Series'], ['wdf-modus', 'WDF / MODUS']];
+  for (const [key, label] of filters) {
+    const btn = el('button', 'filter' + (key === 'all' ? ' active' : ''), label);
+    btn.addEventListener('click', () => {
+      activeFilter = key;
+      bar.querySelectorAll('.filter').forEach((b) => b.classList.remove('active'));
+      btn.classList.add('active');
+      renderTournaments();
+    });
+    bar.append(btn);
+  }
+}
+
+function init() {
+  initFilters();
+  document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
+
+  try {
+    const cached = JSON.parse(localStorage.getItem(CACHE_KEY));
+    if (cached && cached.programmes) epg = cached;
+  } catch { /* ignore corrupt cache */ }
+
+  renderAll();
+
+  if (!epg || Date.now() - epg.fetchedAt > CACHE_MAX_AGE_MS) {
+    refresh(false);
+  }
+
+  // Keep "on air now" fresh while the page is open.
+  setInterval(renderOnAir, 60000);
+}
+
+init();
