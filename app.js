@@ -332,9 +332,12 @@ function renderGuide() {
   const tomorrowIso = fmtIsoDate.format(new Date(Date.now() + 86400000));
   const now = Date.now();
 
-  const entries = buildGuideEntries().filter((e) =>
-    activeFilter === 'all' ? true : e.category === activeFilter
-  );
+  // Hide programmes that have finished. Where the EPG hasn't told us the end
+  // time, assume a session lasts ~5.5 hours.
+  const FALLBACK_SESSION_MS = 5.5 * 3600000;
+  const entries = buildGuideEntries()
+    .filter((e) => (e.end ? e.end > now : e.ts + FALLBACK_SESSION_MS > now))
+    .filter((e) => (activeFilter === 'all' ? true : e.category === activeFilter));
 
   if (!entries.length) {
     box.append(el('p', 'muted', 'No televised darts found for this filter.'));
@@ -388,7 +391,6 @@ function renderGuide() {
 
     const row = el('div', 'guide-row');
     if (e.status === 'rerun') row.classList.add('guide-rerun');
-    if (e.end && e.end < now) row.classList.add('guide-finished');
     const onAirNow = e.status === 'epg' && e.ts <= now && e.end && now < e.end;
 
     const timeCol = el('div', 'guide-time');
