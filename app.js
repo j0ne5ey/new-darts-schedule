@@ -235,13 +235,13 @@ function buildGuideEntries() {
     }
   }
 
-  // EPG programmes not tied to a curated session (extra airings, highlights,
-  // repeats, anything we didn't predict). Only shown under the "All" filter.
+  // Live EPG programmes not tied to a curated session (extra airings we
+  // didn't predict). Repeats and highlights are deliberately excluded.
   if (epg) {
     const now = Date.now();
     const groups = new Map(); // simulcasts: same start + title
     for (const p of epg.programmes) {
-      if (usedEpg.has(epgKey(p)) || p.end < now) continue;
+      if (!p.live || usedEpg.has(epgKey(p)) || p.end < now) continue;
       const key = `${p.start}|${p.title}`;
       if (!groups.has(key)) groups.set(key, []);
       groups.get(key).push(p);
@@ -255,9 +255,9 @@ function buildGuideEntries() {
         time: fmtTime.format(new Date(p.start)),
         channels: [...new Set(airings.map((a) => a.channel))],
         title: p.title.replace(/^Live\s*/i, ''),
-        sub: p.live ? '' : 'Highlights / repeat',
+        sub: '',
         category: null,
-        status: p.live ? 'epg' : 'rerun',
+        status: 'epg',
       });
     }
   }
@@ -390,7 +390,6 @@ function renderGuide() {
     }
 
     const row = el('div', 'guide-row');
-    if (e.status === 'rerun') row.classList.add('guide-rerun');
     const onAirNow = e.status === 'epg' && e.ts <= now && e.end && now < e.end;
 
     const timeCol = el('div', 'guide-time');

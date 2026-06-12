@@ -258,9 +258,6 @@ main {
 }
 .guide-sub { color: var(--muted); font-size: 0.86rem; margin-top: 1px; }
 
-.guide-rerun { opacity: 0.55; }
-.guide-rerun .guide-title { font-weight: 400; }
-
 /* ---------- tournament cards ---------- */
 
 .month-head {
