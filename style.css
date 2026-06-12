@@ -43,7 +43,7 @@ main {
   background: rgba(14, 17, 23, 0.92);
   backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--border);
-  padding: env(safe-area-inset-top) 14px 8px;
+  padding: env(safe-area-inset-top) 14px 0;
 }
 
 .topbar-inner {
@@ -84,6 +84,32 @@ main {
   min-height: 1.1em;
 }
 
+/* ---------- tabs ---------- */
+
+.tabs {
+  max-width: 720px;
+  margin: 8px auto 0;
+  display: flex;
+  gap: 4px;
+}
+
+.tab {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 10px 4px 12px;
+  cursor: pointer;
+}
+.tab.active {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+
 /* ---------- on air now ---------- */
 
 .onair {
@@ -105,70 +131,23 @@ main {
   background: var(--live);
   flex-shrink: 0;
   animation: pulse 1.6s ease-in-out infinite;
+  display: inline-block;
 }
 @keyframes pulse { 50% { opacity: 0.35; } }
 
-/* ---------- listings ---------- */
+/* ---------- filters & day nav ---------- */
 
-.listings-wrap {
-  margin: 14px 0;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 4px 14px;
-}
-.listings-wrap summary {
-  cursor: pointer;
-  padding: 10px 0;
-  list-style: none;
-  display: flex;
-  align-items: center;
-}
-.listings-wrap summary::-webkit-details-marker { display: none; }
-.listings-wrap summary h2 { font-size: 1.05rem; margin: 0; }
-.listings-wrap summary::after {
-  content: "▾";
-  margin-left: auto;
-  color: var(--muted);
-  transition: transform 0.2s;
-}
-.listings-wrap[open] summary::after { transform: rotate(180deg); }
-
-.day-head {
-  font-size: 0.85rem;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: var(--accent);
-  margin: 14px 0 6px;
-}
-
-.listing-row {
-  display: flex;
-  gap: 12px;
-  padding: 8px 0;
-  border-top: 1px solid var(--border);
-}
-.listing-time { font-weight: 700; min-width: 52px; font-variant-numeric: tabular-nums; }
-.listing-info { flex: 1; }
-.listing-title { font-weight: 600; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.listing-rerun { opacity: 0.55; }
-.listing-rerun .listing-title { font-weight: 400; }
-
-/* ---------- filters ---------- */
-
-.filters {
+.filters, .daynav {
   display: flex;
   gap: 8px;
   overflow-x: auto;
-  padding: 14px 0 10px;
   -webkit-overflow-scrolling: touch;
   scrollbar-width: none;
-  position: sticky;
-  top: 92px;
-  z-index: 5;
-  background: var(--bg);
 }
-.filters::-webkit-scrollbar { display: none; }
+.filters::-webkit-scrollbar, .daynav::-webkit-scrollbar { display: none; }
+
+.filters { padding: 14px 0 4px; }
+.daynav { padding: 8px 0 10px; }
 
 .filter {
   flex-shrink: 0;
@@ -188,6 +167,73 @@ main {
   color: #06281f;
   font-weight: 700;
 }
+
+.daynav-chip {
+  flex-shrink: 0;
+  background: none;
+  color: var(--accent);
+  border: 1px solid var(--border);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 4px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+}
+
+/* ---------- TV guide ---------- */
+
+.guide-day-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  position: sticky;
+  top: 118px;
+  z-index: 4;
+  background: var(--bg);
+  padding: 14px 2px 6px;
+  border-bottom: 2px solid var(--border);
+  scroll-margin-top: 130px;
+}
+.guide-day-name {
+  font-size: 1.02rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+.guide-day-today .guide-day-name { color: var(--accent); }
+.guide-day-date { color: var(--muted); font-size: 0.88rem; }
+
+.guide-day { margin-bottom: 4px; }
+
+.guide-row {
+  display: flex;
+  gap: 12px;
+  padding: 10px 2px;
+  border-bottom: 1px solid var(--border);
+}
+.guide-time {
+  min-width: 56px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  font-size: 1.02rem;
+  text-align: right;
+}
+.guide-time .live-dot { margin: 4px 0 0; }
+
+.guide-info { flex: 1; min-width: 0; }
+.guide-title {
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.guide-sub { color: var(--muted); font-size: 0.86rem; margin-top: 1px; }
+
+.guide-rerun { opacity: 0.55; }
+.guide-rerun .guide-title { font-weight: 400; }
+.guide-finished { opacity: 0.45; }
 
 /* ---------- tournament cards ---------- */
 
@@ -276,7 +322,7 @@ main {
 .badge-expected { background: #3a2e12; color: var(--amber); }
 .badge-provisional { background: #3a2e12; color: var(--amber); }
 
-/* ---------- sessions ---------- */
+/* ---------- sessions (tournaments tab) ---------- */
 
 .card details { margin-top: 12px; }
 .card summary {
