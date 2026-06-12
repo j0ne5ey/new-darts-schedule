@@ -348,7 +348,7 @@ function renderGuide() {
     if (!months.includes(m)) months.push(m);
   }
   const todayBtn = el('button', 'daynav-chip', 'Today');
-  todayBtn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
+  todayBtn.addEventListener('click', () => window.scrollTo(0, 0));
   nav.append(todayBtn);
   for (const m of months) {
     const label = new Date(m + '-15T12:00:00')
@@ -356,7 +356,7 @@ function renderGuide() {
     const btn = el('button', 'daynav-chip', label);
     btn.addEventListener('click', () => {
       const target = document.getElementById('month-' + m);
-      if (target) target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      if (target) target.scrollIntoView({ block: 'start' });
     });
     nav.append(btn);
   }
@@ -570,6 +570,14 @@ function initTabs() {
     btn.addEventListener('click', () => setView(btn.dataset.view)));
 }
 
+function initTodayButton() {
+  const btn = document.getElementById('todayBtn');
+  btn.addEventListener('click', () => window.scrollTo(0, 0));
+  const update = () => { btn.hidden = window.scrollY < 600; };
+  window.addEventListener('scroll', update, { passive: true });
+  update();
+}
+
 function initFilters() {
   const bar = document.getElementById('filters');
   const filters = [['all', 'All'], ['major', 'Majors'], ['premier-league', 'Premier League'],
@@ -590,6 +598,7 @@ function initFilters() {
 function init() {
   initTabs();
   initFilters();
+  initTodayButton();
   document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
 
   try {
