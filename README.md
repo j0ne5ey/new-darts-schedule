@@ -1,9 +1,10 @@
 # 🎯 Darts TV Guide
 
-A mobile-first, single-page guide to every televised darts tournament over the
-next 12 months — PDC majors, Premier League, European Tour, World Series, WDF
-Lakeside and the MODUS Super Series — with session times and, crucially, the
-**exact channel** each session airs on.
+A mobile-first, single-page guide to every darts tournament on UK broadcast TV
+over the next 12 months — PDC majors, Premier League, World Series and WDF
+Lakeside — with session times and, crucially, the **exact channel** each
+session airs on. Online-only content (PDC TV European Tour streams, MODUS
+Super Series) is deliberately excluded: if it's listed, it's on telly.
 
 ## How it stays accurate
 
@@ -59,7 +60,7 @@ It also works opened straight from the file system (double-click
 update as the PDC/WDF announce them:
 
 - 2027 provisional entries (Bahrain/Saudi Masters, World Masters, Premier
-  League nights & venues, UK Open, European Tour calendar, World Cup)
+  League nights & venues, UK Open, World Cup)
 - World Championship session-by-session schedule (published ~November 2026)
 - WDF Lakeside 2026 broadcaster confirmation
 

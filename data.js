@@ -16,16 +16,6 @@ const DATA_REVIEWED = '2026-06-12';
 
 // ---- helpers used to build session lists ----------------------------------
 
-function euroTourSessions(fri, sat, sun) {
-  return [
-    { date: fri, time: '18:00', label: 'First Round — Evening Session', status: 'expected' },
-    { date: sat, time: '12:00', label: 'Second Round — Afternoon Session', status: 'expected' },
-    { date: sat, time: '18:00', label: 'Second Round — Evening Session', status: 'expected' },
-    { date: sun, time: '12:00', label: 'Third Round — Afternoon Session', status: 'expected' },
-    { date: sun, time: '17:00', label: 'Quarter-Finals to Final', status: 'expected' },
-  ];
-}
-
 // Daily sessions between two dates inclusive (ISO strings), optional excluded dates.
 function dailySessions(from, to, sessions, except = []) {
   const out = [];
@@ -69,18 +59,6 @@ const TOURNAMENTS = [
     ],
   },
   {
-    id: 'slovak-open-2026',
-    name: 'Slovak Darts Open (ET 9)',
-    category: 'european-tour',
-    start: '2026-06-19', end: '2026-06-21',
-    venue: 'Incheba Expo', city: 'Bratislava', country: 'Slovakia',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription). DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'confirmed',
-    epgKeywords: ['slovak darts open'],
-    notes: 'New European Tour event for 2026.',
-    sessions: euroTourSessions('2026-06-19', '2026-06-20', '2026-06-21'),
-  },
-  {
     id: 'us-masters-2026',
     name: 'US Darts Masters (World Series)',
     category: 'world-series',
@@ -97,17 +75,6 @@ const TOURNAMENTS = [
   },
 
   // ======================= JULY 2026 =======================
-  {
-    id: 'european-open-2026',
-    name: 'European Darts Open (ET 10)',
-    category: 'european-tour',
-    start: '2026-07-10', end: '2026-07-12',
-    venue: 'Ostermann Arena', city: 'Leverkusen', country: 'Germany',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription). DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'confirmed',
-    epgKeywords: ['european darts open'],
-    sessions: euroTourSessions('2026-07-10', '2026-07-11', '2026-07-12'),
-  },
   {
     id: 'world-matchplay-2026',
     name: 'World Matchplay 2026',
@@ -162,41 +129,7 @@ const TOURNAMENTS = [
       { date: '2026-08-22', time: '10:00', label: 'Night 2 — Semi-Finals & Final (morning UK)', status: 'expected' },
     ],
   },
-  {
-    id: 'hungarian-trophy-2026',
-    name: 'Hungarian Darts Trophy (ET 11)',
-    category: 'european-tour',
-    start: '2026-08-28', end: '2026-08-30',
-    venue: 'MVM Dome', city: 'Budapest', country: 'Hungary',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription). DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'confirmed',
-    epgKeywords: ['hungarian darts trophy'],
-    sessions: euroTourSessions('2026-08-28', '2026-08-29', '2026-08-30'),
-  },
-
   // ======================= SEPTEMBER 2026 =======================
-  {
-    id: 'czech-open-2026',
-    name: 'Czech Darts Open (ET 12)',
-    category: 'european-tour',
-    start: '2026-09-04', end: '2026-09-06',
-    venue: 'PVA Expo', city: 'Prague', country: 'Czechia',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription). DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'confirmed',
-    epgKeywords: ['czech darts open'],
-    sessions: euroTourSessions('2026-09-04', '2026-09-05', '2026-09-06'),
-  },
-  {
-    id: 'flanders-trophy-2026',
-    name: 'Flanders Darts Trophy (ET 13)',
-    category: 'european-tour',
-    start: '2026-09-11', end: '2026-09-13',
-    venue: 'Antwerp Expo', city: 'Antwerp', country: 'Belgium',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription). DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'confirmed',
-    epgKeywords: ['flanders darts trophy'],
-    sessions: euroTourSessions('2026-09-11', '2026-09-12', '2026-09-13'),
-  },
   {
     id: 'ws-finals-2026',
     name: 'World Series of Darts Finals 2026',
@@ -230,28 +163,6 @@ const TOURNAMENTS = [
   },
 
   // ======================= OCTOBER 2026 =======================
-  {
-    id: 'swiss-trophy-2026',
-    name: 'Swiss Darts Trophy (ET 14)',
-    category: 'european-tour',
-    start: '2026-10-09', end: '2026-10-11',
-    venue: 'St. Jakobshalle', city: 'Basel', country: 'Switzerland',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription). DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'confirmed',
-    epgKeywords: ['swiss darts trophy'],
-    sessions: euroTourSessions('2026-10-09', '2026-10-10', '2026-10-11'),
-  },
-  {
-    id: 'dutch-championship-2026',
-    name: 'Dutch Darts Championship (ET 15)',
-    category: 'european-tour',
-    start: '2026-10-16', end: '2026-10-18',
-    venue: 'MECC', city: 'Maastricht', country: 'Netherlands',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription). DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'confirmed',
-    epgKeywords: ['dutch darts championship'],
-    sessions: euroTourSessions('2026-10-16', '2026-10-17', '2026-10-18'),
-  },
   {
     id: 'european-championship-2026',
     name: 'European Championship 2026',
@@ -419,19 +330,6 @@ const TOURNAMENTS = [
     notes: 'Dates not yet announced — shown in the usual first-weekend-of-March slot. The "FA Cup of darts": 160 players, open draw.',
     sessions: [],
   },
-  {
-    id: 'european-tour-2027',
-    name: 'European Tour 2027 (calendar TBA)',
-    category: 'european-tour',
-    start: '2027-02-19', end: '2027-06-30',
-    venue: 'Various arenas', city: 'Across Europe', country: '',
-    tv: { uk: 'PDC TV', detail: 'Streamed on PDC TV (subscription); DAZN & Viaplay internationally. Not on UK TV.' },
-    status: 'provisional',
-    epgKeywords: [],
-    notes: 'The PDC normally publishes the next European Tour calendar in September. 2026 had 15 events from late February onwards; expect a similar 2027 schedule. This card will be updated once dates are announced.',
-    sessions: [],
-  },
-
   // ======================= JUNE 2027 (provisional) =======================
   {
     id: 'world-cup-2027',
@@ -443,21 +341,6 @@ const TOURNAMENTS = [
     status: 'provisional',
     epgKeywords: ['world cup of darts'],
     notes: 'Dates not yet announced — shown in the usual mid-June slot.',
-    sessions: [],
-  },
-
-  // ======================= ONGOING =======================
-  {
-    id: 'modus-super-series',
-    name: 'MODUS Super Series',
-    category: 'wdf-modus',
-    ongoing: true,
-    start: '2026-06-12', end: '2027-06-12',
-    venue: 'MODUS studio', city: 'Portsmouth', country: 'England',
-    tv: { uk: 'Pluto TV / YouTube', detail: 'Live and free: sessions stream on Pluto TV, with Saturday Finals Night live on the MODUS Super Series YouTube channel from 19:30.' },
-    status: 'confirmed',
-    epgKeywords: ['modus'],
-    notes: 'Runs most weeks year-round: 12 players, Monday–Friday sessions (daytime from 09:30 Mon–Wed and 13:00 Thu–Fri) with Finals Night on Saturday. Occasional break weeks — check modussuperseries.com for the current week.',
     sessions: [],
   },
 ];

@@ -30,9 +30,8 @@ const BASE_CHANNELS = {
 const CATEGORIES = {
   'major': { label: 'Major', cls: 'cat-major' },
   'premier-league': { label: 'Premier League', cls: 'cat-pl' },
-  'european-tour': { label: 'Euro Tour', cls: 'cat-et' },
   'world-series': { label: 'World Series', cls: 'cat-ws' },
-  'wdf-modus': { label: 'WDF / MODUS', cls: 'cat-wdf' },
+  'wdf-modus': { label: 'WDF', cls: 'cat-wdf' },
 };
 
 const fmtTime = new Intl.DateTimeFormat('en-GB', { timeZone: 'Europe/London', hour: '2-digit', minute: '2-digit' });
@@ -574,7 +573,7 @@ function initTabs() {
 function initFilters() {
   const bar = document.getElementById('filters');
   const filters = [['all', 'All'], ['major', 'Majors'], ['premier-league', 'Premier League'],
-    ['european-tour', 'Euro Tour'], ['world-series', 'World Series'], ['wdf-modus', 'WDF / MODUS']];
+    ['world-series', 'World Series'], ['wdf-modus', 'WDF']];
   for (const [key, label] of filters) {
     const btn = el('button', 'filter' + (key === 'all' ? ' active' : ''), label);
     btn.addEventListener('click', () => {
