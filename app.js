@@ -538,12 +538,20 @@ function renderTournaments() {
 }
 
 function renderAll() {
-  setStatus(updatedLabel());
-  renderOnAir();
-  renderGuide();
-  renderTournaments();
-  document.getElementById('reviewedLine').textContent =
-    `Tournament data last reviewed ${new Date(DATA_REVIEWED + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`;
+  // Each section renders independently so one failure can't blank the page.
+  const sections = [
+    () => setStatus(updatedLabel()),
+    renderOnAir,
+    renderGuide,
+    renderTournaments,
+    () => {
+      document.getElementById('reviewedLine').textContent =
+        `Tournament data last reviewed ${new Date(DATA_REVIEWED + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`;
+    },
+  ];
+  for (const render of sections) {
+    try { render(); } catch (err) { console.error(err); }
+  }
 }
 
 // ---------------------------------------------------------------------------

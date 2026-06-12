@@ -7,7 +7,7 @@
   <title>Darts TV Guide — next 12 months</title>
   <meta name="description" content="Every televised darts session for the next 12 months, day by day, with live channel confirmation from the TV guide.">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎯</text></svg>">
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
   <header class="topbar">
@@ -52,7 +52,20 @@
     <p>Sources: PDC, WDF &amp; MODUS announcements; live listings from the Sky TV guide. Always double-check before planning your evening — schedules can change.</p>
   </footer>
 
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+  <script>
+    // If anything crashes, show it rather than leaving a blank page.
+    window.addEventListener('error', (e) => {
+      let banner = document.getElementById('errBanner');
+      if (!banner) {
+        banner = document.createElement('div');
+        banner.id = 'errBanner';
+        banner.style.cssText = 'background:#5c1f2b;color:#fff;padding:12px 16px;font-size:14px;';
+        document.body.prepend(banner);
+      }
+      banner.textContent = 'Something went wrong loading the guide — try a force-reload (this can happen briefly mid-update). Error: ' + e.message;
+    });
+  </script>
+  <script src="data.js?v=3"></script>
+  <script src="app.js?v=3"></script>
 </body>
 </html>
