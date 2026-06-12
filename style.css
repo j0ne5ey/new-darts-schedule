@@ -26,7 +26,34 @@ body {
   font-size: 16px;
   line-height: 1.45;
   padding-bottom: env(safe-area-inset-bottom);
+  /* Custom pull-to-refresh replaces the browser's native pull gesture. */
+  overscroll-behavior-y: none;
 }
+
+/* ---------- pull-to-refresh indicator ---------- */
+
+#ptr {
+  position: fixed;
+  top: calc(env(safe-area-inset-top) - 52px);
+  left: 50%;
+  margin-left: -22px;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+  color: var(--accent);
+  z-index: 30;
+  opacity: 0;
+  pointer-events: none;
+}
+#ptr svg { transition: transform 0.15s; }
+#ptr.armed svg { transform: rotate(180deg); }
+#ptr.refreshing svg { animation: spin 0.9s linear infinite; }
 
 main {
   max-width: 720px;

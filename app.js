@@ -578,6 +578,62 @@ function initTodayButton() {
   update();
 }
 
+function initPullToRefresh() {
+  const ptr = document.getElementById('ptr');
+  if (!ptr) return;
+  const THRESHOLD = 80; // pull distance (after damping) that arms a refresh
+  let startY = null;
+  let dist = 0;
+  let pulling = false;
+
+  const drag = (d) => {
+    ptr.style.transition = 'none';
+    ptr.style.opacity = d > 8 ? '1' : '0';
+    ptr.style.transform = `translateY(${d}px)`;
+    ptr.classList.toggle('armed', d >= THRESHOLD);
+  };
+  const settle = (d, keepVisible) => {
+    ptr.style.transition = 'transform 0.2s, opacity 0.2s';
+    ptr.style.transform = `translateY(${d}px)`;
+    if (!keepVisible) ptr.style.opacity = '0';
+  };
+
+  window.addEventListener('touchstart', (e) => {
+    startY = window.scrollY <= 0 ? e.touches[0].clientY : null;
+    dist = 0;
+    pulling = false;
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (startY === null) return;
+    dist = (e.touches[0].clientY - startY) * 0.5; // damping
+    if (dist > 0 && window.scrollY <= 0) {
+      pulling = true;
+      if (e.cancelable) e.preventDefault(); // suppress rubber-band/native pull
+      drag(Math.min(dist, 130));
+    } else if (pulling) {
+      pulling = false;
+      drag(0);
+    }
+  }, { passive: false });
+
+  window.addEventListener('touchend', async () => {
+    if (startY === null) return;
+    const fire = pulling && dist >= THRESHOLD;
+    startY = null;
+    pulling = false;
+    if (fire) {
+      ptr.classList.remove('armed');
+      ptr.classList.add('refreshing');
+      settle(THRESHOLD, true);
+      await refresh(true);
+      ptr.classList.remove('refreshing');
+    }
+    ptr.classList.remove('armed');
+    settle(0, false);
+  });
+}
+
 function initFilters() {
   const bar = document.getElementById('filters');
   const filters = [['all', 'All'], ['major', 'Majors'], ['premier-league', 'Premier League'],
@@ -599,6 +655,7 @@ function init() {
   initTabs();
   initFilters();
   initTodayButton();
+  initPullToRefresh();
   document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
 
   try {
