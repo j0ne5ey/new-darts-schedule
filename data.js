@@ -12,7 +12,7 @@
  * Sky EPG at refresh time — see app.js.
  */
 
-const DATA_REVIEWED = '2026-06-12';
+const DATA_REVIEWED = '2026-06-29';
 
 // ---- helpers used to build session lists ----------------------------------
 
@@ -84,19 +84,19 @@ const TOURNAMENTS = [
     tv: { uk: 'Sky Sports', detail: 'Every session live on Sky Sports — typically Main Event and/or Action. Use Refresh in the final week for the exact channel.' },
     status: 'confirmed',
     epgKeywords: ['world matchplay'],
-    notes: 'The Women\'s World Matchplay is staged in the Sunday 26th afternoon session.',
+    notes: 'Session schedule officially published. The Women\'s World Matchplay is staged in the Sunday 26th afternoon session.',
     sessions: [
-      { date: '2026-07-18', time: '19:00', label: 'First Round — Evening Session', status: 'expected' },
-      { date: '2026-07-19', time: '13:00', label: 'First Round — Afternoon Session', status: 'expected' },
-      { date: '2026-07-19', time: '19:00', label: 'First Round — Evening Session', status: 'expected' },
-      { date: '2026-07-20', time: '19:00', label: 'First Round — Evening Session', status: 'expected' },
-      { date: '2026-07-21', time: '19:00', label: 'Second Round — Evening Session', status: 'expected' },
-      { date: '2026-07-22', time: '19:00', label: 'Second Round — Evening Session', status: 'expected' },
-      { date: '2026-07-23', time: '19:00', label: 'Quarter-Finals — Evening Session', status: 'expected' },
-      { date: '2026-07-24', time: '19:00', label: 'Quarter-Finals — Evening Session', status: 'expected' },
-      { date: '2026-07-25', time: '19:00', label: 'Semi-Finals — Evening Session', status: 'expected' },
-      { date: '2026-07-26', time: '13:00', label: 'Women\'s World Matchplay — Afternoon Session', status: 'expected' },
-      { date: '2026-07-26', time: '18:00', label: 'Final — Evening Session', status: 'expected' },
+      { date: '2026-07-18', time: '19:00', label: 'First Round — Evening Session', status: 'confirmed' },
+      { date: '2026-07-19', time: '13:00', label: 'First Round — Afternoon Session', status: 'confirmed' },
+      { date: '2026-07-19', time: '19:00', label: 'First Round — Evening Session', status: 'confirmed' },
+      { date: '2026-07-20', time: '19:00', label: 'First Round — Evening Session', status: 'confirmed' },
+      { date: '2026-07-21', time: '19:00', label: 'Second Round — Evening Session', status: 'confirmed' },
+      { date: '2026-07-22', time: '19:00', label: 'Second Round — Evening Session', status: 'confirmed' },
+      { date: '2026-07-23', time: '19:00', label: 'Quarter-Finals — Evening Session', status: 'confirmed' },
+      { date: '2026-07-24', time: '19:00', label: 'Quarter-Finals — Evening Session', status: 'confirmed' },
+      { date: '2026-07-25', time: '19:00', label: 'Semi-Finals — Evening Session', status: 'confirmed' },
+      { date: '2026-07-26', time: '13:00', label: 'Women\'s World Matchplay — Afternoon Session', status: 'confirmed' },
+      { date: '2026-07-26', time: '19:00', label: 'Final — Evening Session', status: 'confirmed' },
     ],
   },
 
