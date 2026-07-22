@@ -43,6 +43,12 @@ let epg = null;          // { fetchedAt, channels: {sid:name}, programmes: [...]
 let activeFilter = 'all';
 let activeView = 'guide';
 
+// Which rows are expanded, keyed by a stable identity, so periodic/refresh
+// re-renders (which rebuild the DOM from scratch) don't silently collapse
+// a panel the user has open.
+const expandedGuideKeys = new Set();
+const expandedSessionKeys = new Set();
+
 // ---------------------------------------------------------------------------
 // EPG fetching
 // ---------------------------------------------------------------------------
@@ -189,6 +195,12 @@ function airingsNearTime(dayProgrammes, sessionDate, sessionTime) {
 
 const epgKey = (p) => `${p.sid}|${p.start}|${p.title}`;
 
+// Simulcasts sometimes carry slightly different copy; take the longest.
+function bestSynopsis(airings) {
+  return airings.map((a) => (a.synopsis || '').trim()).filter(Boolean)
+    .sort((a, b) => b.length - a.length)[0] || '';
+}
+
 // ---------------------------------------------------------------------------
 // Guide entries: curated sessions + EPG merged into one TV-style schedule
 // ---------------------------------------------------------------------------
@@ -218,6 +230,7 @@ function buildGuideEntries() {
           sub: s.label,
           category: t.category,
           status: 'epg',
+          synopsis: bestSynopsis(airings),
         });
       } else {
         entries.push({
@@ -230,6 +243,7 @@ function buildGuideEntries() {
           sub: s.label,
           category: t.category,
           status: s.status, // confirmed | expected
+          synopsis: '',
         });
       }
     }
@@ -258,6 +272,7 @@ function buildGuideEntries() {
         sub: '',
         category: null,
         status: 'epg',
+        synopsis: bestSynopsis(airings),
       });
     }
   }
@@ -389,7 +404,13 @@ function renderGuide() {
       box.append(dayBlock);
     }
 
-    const row = el('div', 'guide-row');
+    const key = `${e.date}|${e.ts}|${e.title}`;
+    const isOpen = expandedGuideKeys.has(key);
+
+    const row = el('div', 'guide-row expandable' + (isOpen ? ' open' : ''));
+    row.setAttribute('role', 'button');
+    row.setAttribute('tabindex', '0');
+    row.setAttribute('aria-expanded', String(isOpen));
     const onAirNow = e.status === 'epg' && e.ts <= now && e.end && now < e.end;
 
     const timeCol = el('div', 'guide-time');
@@ -413,7 +434,31 @@ function renderGuide() {
     info.append(chips);
 
     row.append(info);
+    row.append(el('span', 'guide-chevron', '▾'));
+
+    const detail = el('div', 'guide-detail');
+    detail.hidden = !isOpen;
+    if (e.synopsis) {
+      detail.append(el('div', 'guide-detail-label', '🎯 Who’s playing'));
+      detail.append(el('p', 'guide-detail-text', e.synopsis));
+    } else {
+      detail.append(el('p', 'guide-detail-text muted',
+        'Match-ups aren’t confirmed yet. The draw for this stage is usually announced shortly before it’s played — check back nearer the day, or tap Refresh once it’s within the next 8 days.'));
+    }
+
+    const toggle = () => {
+      const open = row.classList.toggle('open');
+      row.setAttribute('aria-expanded', String(open));
+      detail.hidden = !open;
+      if (open) expandedGuideKeys.add(key); else expandedGuideKeys.delete(key);
+    };
+    row.addEventListener('click', toggle);
+    row.addEventListener('keydown', (ev) => {
+      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); }
+    });
+
     dayBlock.append(row);
+    dayBlock.append(detail);
   }
 }
 
@@ -421,8 +466,14 @@ function renderGuide() {
 // Tournaments view
 // ---------------------------------------------------------------------------
 
-function sessionRow(session, tournamentProgrammes) {
-  const row = el('div', 'session-row');
+function sessionRow(tournamentId, session, tournamentProgrammes, wrap) {
+  const key = `${tournamentId}|${session.date}|${session.time}|${session.label}`;
+  const isOpen = expandedSessionKeys.has(key);
+
+  const row = el('div', 'session-row expandable' + (isOpen ? ' open' : ''));
+  row.setAttribute('role', 'button');
+  row.setAttribute('tabindex', '0');
+  row.setAttribute('aria-expanded', String(isOpen));
   const d = new Date(session.date + 'T12:00:00');
   row.append(el('div', 'session-date', fmtDayShort.format(d)));
 
@@ -448,8 +499,33 @@ function sessionRow(session, tournamentProgrammes) {
   if (chips.childNodes.length) info.append(chips);
 
   row.append(info);
+  row.append(el('span', 'guide-chevron', '▾'));
   if (session.date < fmtIsoDate.format(new Date())) row.classList.add('session-past');
-  return row;
+
+  const synopsis = bestSynopsis(airings);
+  const detail = el('div', 'guide-detail');
+  detail.hidden = !isOpen;
+  if (synopsis) {
+    detail.append(el('div', 'guide-detail-label', '🎯 Who’s playing'));
+    detail.append(el('p', 'guide-detail-text', synopsis));
+  } else {
+    detail.append(el('p', 'guide-detail-text muted',
+      'Match-ups aren’t confirmed yet. The draw for this stage is usually announced shortly before it’s played — check back nearer the day, or tap Refresh once it’s within the next 8 days.'));
+  }
+
+  const toggle = () => {
+    const open = row.classList.toggle('open');
+    row.setAttribute('aria-expanded', String(open));
+    detail.hidden = !open;
+    if (open) expandedSessionKeys.add(key); else expandedSessionKeys.delete(key);
+  };
+  row.addEventListener('click', toggle);
+  row.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); }
+  });
+
+  wrap.append(row);
+  wrap.append(detail);
 }
 
 function tournamentCard(t) {
@@ -495,7 +571,7 @@ function tournamentCard(t) {
       `Sessions (${upcoming ? upcoming + ' upcoming' : t.sessions.length})`);
     details.append(summary);
     const wrap = el('div', 'sessions');
-    for (const s of t.sessions) wrap.append(sessionRow(s, tournamentProgrammes));
+    for (const s of t.sessions) sessionRow(t.id, s, tournamentProgrammes, wrap);
     details.append(wrap);
     const active = t.start <= todayIso && todayIso <= t.end;
     if (active) details.open = true;

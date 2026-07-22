@@ -258,6 +258,37 @@ main {
 }
 .guide-sub { color: var(--muted); font-size: 0.86rem; margin-top: 1px; }
 
+.expandable { cursor: pointer; }
+.expandable:active { background: var(--surface-2); }
+@media (hover: hover) {
+  .expandable:hover { background: var(--surface-2); }
+}
+
+.guide-chevron {
+  align-self: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+  transition: transform 0.2s;
+  flex-shrink: 0;
+}
+.expandable.open .guide-chevron { transform: rotate(180deg); color: var(--accent); }
+
+.guide-detail {
+  margin: -2px 0 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: var(--surface-2);
+  border-left: 3px solid var(--accent);
+}
+.guide-detail-label {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: 3px;
+}
+.guide-detail-text { margin: 0; font-size: 0.9rem; line-height: 1.5; }
+.guide-detail-text.muted { font-size: 0.86rem; }
+
 /* ---------- tournament cards ---------- */
 
 .month-head {
