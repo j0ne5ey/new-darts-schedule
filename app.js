@@ -94,6 +94,7 @@ async function fetchEpg() {
   const sids = Object.keys(channels);
   const programmes = [];
 
+  let dayFailures = 0;
   const dayFetches = [];
   for (let day = 0; day < EPG_DAYS; day++) {
     dayFetches.push(
@@ -115,10 +116,16 @@ async function fetchEpg() {
             }
           }
         })
-        .catch((err) => console.warn(`EPG day ${day} failed`, err))
+        .catch((err) => { dayFailures++; console.warn(`EPG day ${day} failed`, err); })
     );
   }
   await Promise.all(dayFetches);
+
+  // Every request failed (offline, DNS, API down). Fail loudly rather than
+  // returning an empty result, which would overwrite good cached listings.
+  if (dayFailures === EPG_DAYS) {
+    throw new Error('No TV listings could be fetched — all schedule requests failed.');
+  }
 
   // Dedupe identical entries (same channel, start, title) across day boundaries.
   const seen = new Set();
@@ -140,12 +147,22 @@ async function refresh(manual) {
   setStatus('Checking TV listings…');
   try {
     epg = await fetchEpg();
-    localStorage.setItem(CACHE_KEY, JSON.stringify(epg));
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify(epg));
+    } catch (err) {
+      console.warn('Could not cache listings (storage full or unavailable)', err);
+    }
     renderAll();
   } catch (err) {
+    // Keep whatever listings we already had; renderAll() runs first because it
+    // resets the status line, so the warning has to be written after it.
     console.error(err);
-    setStatus(manual ? 'Couldn’t reach the TV guide — check your connection.' : '');
     renderAll();
+    if (manual) {
+      setStatus(epg
+        ? 'Couldn’t reach the TV guide — showing last saved listings.'
+        : 'Couldn’t reach the TV guide — check your connection.');
+    }
   } finally {
     btn.classList.remove('spinning');
     btn.disabled = false;
@@ -181,16 +198,35 @@ function liveProgrammesOnDate(tournamentProgrammes, sessionDate) {
   );
 }
 
+// A broadcast further than this from a session's advertised start belongs to a
+// different session that day (e.g. an afternoon session must not claim the
+// evening's coverage just because it's the only darts on that date).
+const MAX_SESSION_MATCH_MS = 3 * 3600000;
+const SIMULCAST_WINDOW_MS = 90 * 60000;
+
+// Milliseconds for a session's advertised start, or NaN when the time isn't
+// parseable (e.g. 'TBC') — callers treat NaN as "nothing to match against".
+function sessionStartMs(sessionDate, sessionTime) {
+  return new Date(`${sessionDate}T${sessionTime || '12:00'}:00`).getTime();
+}
+
 // Pick the airing(s) closest to the session start time; simulcasts share a start.
 function airingsNearTime(dayProgrammes, sessionDate, sessionTime) {
   if (!dayProgrammes.length) return [];
-  const target = new Date(`${sessionDate}T${sessionTime || '12:00'}:00`).getTime();
-  let best = Infinity;
-  for (const p of dayProgrammes) best = Math.min(best, Math.abs(p.start - target));
+  const target = sessionStartMs(sessionDate, sessionTime);
+  if (!Number.isFinite(target)) return [];
+
+  let bestStart = null;
+  let bestGap = Infinity;
+  for (const p of dayProgrammes) {
+    const gap = Math.abs(p.start - target);
+    if (gap < bestGap) { bestGap = gap; bestStart = p.start; }
+  }
+  if (bestGap > MAX_SESSION_MATCH_MS) return [];
+
   // Keep airings starting within 90 min of the closest one (captures simulcasts
   // and build-up programmes that start slightly before the session).
-  const bestStart = dayProgrammes.find((p) => Math.abs(p.start - target) === best).start;
-  return dayProgrammes.filter((p) => Math.abs(p.start - bestStart) <= 90 * 60000);
+  return dayProgrammes.filter((p) => Math.abs(p.start - bestStart) <= SIMULCAST_WINDOW_MS);
 }
 
 const epgKey = (p) => `${p.sid}|${p.start}|${p.title}`;
@@ -233,9 +269,12 @@ function buildGuideEntries() {
           synopsis: bestSynopsis(airings),
         });
       } else {
+        // An unparseable time ('TBC') sorts to the end of its day rather than
+        // becoming NaN, which would corrupt sorting and hide the row entirely.
+        const startMs = sessionStartMs(s.date, s.time);
         entries.push({
           date: s.date,
-          ts: new Date(`${s.date}T${s.time || '23:59'}:00`).getTime(),
+          ts: Number.isFinite(startMs) ? startMs : sessionStartMs(s.date, '23:59'),
           end: null,
           time: s.time || 'TBC',
           channels: [t.tv.uk],
@@ -311,6 +350,45 @@ function statusBadge(status) {
   if (status === 'epg') return el('span', 'badge badge-confirmed', '✓ TV guide');
   if (status === 'expected') return el('span', 'badge badge-expected', 'expected time');
   return null;
+}
+
+const NO_DRAW_YET = 'Match-ups aren’t confirmed yet. The draw for this stage is usually announced ' +
+  'shortly before it’s played — check back nearer the day, or tap Refresh once it’s within the next 8 days.';
+
+// A row the user can tap to reveal its match details.
+function expandableRow(cls, isOpen) {
+  const row = el('div', `${cls} expandable${isOpen ? ' open' : ''}`);
+  row.setAttribute('role', 'button');
+  row.setAttribute('tabindex', '0');
+  row.setAttribute('aria-expanded', String(isOpen));
+  return row;
+}
+
+// Builds the "who's playing" panel for a row and wires up the toggle.
+// `openKeys` is the Set that remembers open rows across re-renders.
+function attachDetailPanel(row, hintChip, synopsis, key, openKeys) {
+  const detail = el('div', 'guide-detail');
+  detail.hidden = !openKeys.has(key);
+  if (synopsis) {
+    detail.append(el('div', 'guide-detail-label', '🎯 Who’s playing'));
+    detail.append(el('p', 'guide-detail-text', synopsis));
+  } else {
+    detail.append(el('p', 'guide-detail-text muted', NO_DRAW_YET));
+  }
+
+  const toggle = () => {
+    const open = row.classList.toggle('open');
+    row.setAttribute('aria-expanded', String(open));
+    detail.hidden = !open;
+    hintChip.classList.toggle('open', open);
+    hintChip.querySelector('.chip-hint-text').textContent = open ? 'Hide details' : "Who's playing?";
+    if (open) openKeys.add(key); else openKeys.delete(key);
+  };
+  row.addEventListener('click', toggle);
+  row.addEventListener('keydown', (ev) => {
+    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); }
+  });
+  return detail;
 }
 
 function renderOnAir() {
@@ -414,10 +492,7 @@ function renderGuide() {
     const key = `${e.date}|${e.ts}|${e.title}`;
     const isOpen = expandedGuideKeys.has(key);
 
-    const row = el('div', 'guide-row expandable' + (isOpen ? ' open' : ''));
-    row.setAttribute('role', 'button');
-    row.setAttribute('tabindex', '0');
-    row.setAttribute('aria-expanded', String(isOpen));
+    const row = expandableRow('guide-row', isOpen);
     const onAirNow = e.status === 'epg' && e.ts <= now && e.end && now < e.end;
 
     const timeCol = el('div', 'guide-time');
@@ -444,31 +519,8 @@ function renderGuide() {
 
     row.append(info);
 
-    const detail = el('div', 'guide-detail');
-    detail.hidden = !isOpen;
-    if (e.synopsis) {
-      detail.append(el('div', 'guide-detail-label', '🎯 Who’s playing'));
-      detail.append(el('p', 'guide-detail-text', e.synopsis));
-    } else {
-      detail.append(el('p', 'guide-detail-text muted',
-        'Match-ups aren’t confirmed yet. The draw for this stage is usually announced shortly before it’s played — check back nearer the day, or tap Refresh once it’s within the next 8 days.'));
-    }
-
-    const toggle = () => {
-      const open = row.classList.toggle('open');
-      row.setAttribute('aria-expanded', String(open));
-      detail.hidden = !open;
-      hintChip.classList.toggle('open', open);
-      hintChip.querySelector('.chip-hint-text').textContent = open ? 'Hide details' : "Who's playing?";
-      if (open) expandedGuideKeys.add(key); else expandedGuideKeys.delete(key);
-    };
-    row.addEventListener('click', toggle);
-    row.addEventListener('keydown', (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); }
-    });
-
     dayBlock.append(row);
-    dayBlock.append(detail);
+    dayBlock.append(attachDetailPanel(row, hintChip, e.synopsis, key, expandedGuideKeys));
   }
 }
 
@@ -480,10 +532,7 @@ function sessionRow(tournamentId, session, tournamentProgrammes, wrap) {
   const key = `${tournamentId}|${session.date}|${session.time}|${session.label}`;
   const isOpen = expandedSessionKeys.has(key);
 
-  const row = el('div', 'session-row expandable' + (isOpen ? ' open' : ''));
-  row.setAttribute('role', 'button');
-  row.setAttribute('tabindex', '0');
-  row.setAttribute('aria-expanded', String(isOpen));
+  const row = expandableRow('session-row', isOpen);
   const d = new Date(session.date + 'T12:00:00');
   row.append(el('div', 'session-date', fmtDayShort.format(d)));
 
@@ -513,32 +562,8 @@ function sessionRow(tournamentId, session, tournamentProgrammes, wrap) {
   row.append(info);
   if (session.date < fmtIsoDate.format(new Date())) row.classList.add('session-past');
 
-  const synopsis = bestSynopsis(airings);
-  const detail = el('div', 'guide-detail');
-  detail.hidden = !isOpen;
-  if (synopsis) {
-    detail.append(el('div', 'guide-detail-label', '🎯 Who’s playing'));
-    detail.append(el('p', 'guide-detail-text', synopsis));
-  } else {
-    detail.append(el('p', 'guide-detail-text muted',
-      'Match-ups aren’t confirmed yet. The draw for this stage is usually announced shortly before it’s played — check back nearer the day, or tap Refresh once it’s within the next 8 days.'));
-  }
-
-  const toggle = () => {
-    const open = row.classList.toggle('open');
-    row.setAttribute('aria-expanded', String(open));
-    detail.hidden = !open;
-    hintChip.classList.toggle('open', open);
-    hintChip.querySelector('.chip-hint-text').textContent = open ? 'Hide details' : "Who's playing?";
-    if (open) expandedSessionKeys.add(key); else expandedSessionKeys.delete(key);
-  };
-  row.addEventListener('click', toggle);
-  row.addEventListener('keydown', (ev) => {
-    if (ev.key === 'Enter' || ev.key === ' ') { ev.preventDefault(); toggle(); }
-  });
-
   wrap.append(row);
-  wrap.append(detail);
+  wrap.append(attachDetailPanel(row, hintChip, bestSynopsis(airings), key, expandedSessionKeys));
 }
 
 function tournamentCard(t) {
@@ -637,6 +662,9 @@ function renderAll() {
       document.getElementById('reviewedLine').textContent =
         `Tournament data last reviewed ${new Date(DATA_REVIEWED + 'T12:00:00').toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}.`;
     },
+    // The status line above can change the topbar's height. Deferred to the
+    // next frame so measuring doesn't force a reflow mid-render.
+    () => requestAnimationFrame(syncTopbarHeight),
   ];
   for (const render of sections) {
     try { render(); } catch (err) { console.error(err); }
@@ -658,6 +686,26 @@ function setView(view) {
 function initTabs() {
   document.querySelectorAll('.tab').forEach((btn) =>
     btn.addEventListener('click', () => setView(btn.dataset.view)));
+}
+
+// Sticky day headers must clear the topbar exactly. Its height varies with
+// viewport width, safe-area insets, font loading and the status line's text,
+// so measure it rather than hard-coding an offset that drifts out of date.
+function syncTopbarHeight() {
+  const topbar = document.querySelector('.topbar');
+  if (!topbar) return;
+  const h = Math.ceil(topbar.getBoundingClientRect().height);
+  document.documentElement.style.setProperty('--topbar-h', `${h}px`);
+}
+
+function initTopbarHeight() {
+  syncTopbarHeight();
+  window.addEventListener('resize', syncTopbarHeight, { passive: true });
+  window.addEventListener('orientationchange', syncTopbarHeight, { passive: true });
+  // Web fonts can change the topbar's height after first paint.
+  if (document.fonts && document.fonts.ready) {
+    document.fonts.ready.then(syncTopbarHeight).catch(() => {});
+  }
 }
 
 function initTodayButton() {
@@ -746,6 +794,7 @@ function init() {
   initFilters();
   initTodayButton();
   initPullToRefresh();
+  initTopbarHeight();
   document.getElementById('refreshBtn').addEventListener('click', () => refresh(true));
 
   try {

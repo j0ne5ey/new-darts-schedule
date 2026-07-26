@@ -12,6 +12,9 @@
   --live: #e0455c;
   --amber: #d9a13b;
   --radius: 14px;
+  /* Measured from the real topbar at runtime (see syncTopbarHeight in app.js);
+     this value is only the pre-script fallback. */
+  --topbar-h: 133px;
 }
 
 * { box-sizing: border-box; }
@@ -215,12 +218,12 @@ main {
   align-items: baseline;
   gap: 8px;
   position: sticky;
-  top: 118px;
+  top: var(--topbar-h);
   z-index: 4;
   background: var(--bg);
   padding: 14px 2px 6px;
   border-bottom: 2px solid var(--border);
-  scroll-margin-top: 130px;
+  scroll-margin-top: var(--topbar-h);
 }
 .guide-day-name {
   font-size: 1.02rem;
