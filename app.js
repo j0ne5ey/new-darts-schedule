@@ -300,6 +300,13 @@ function channelChip(name, live) {
   return chip;
 }
 
+function detailHintChip(isOpen) {
+  const chip = el('span', 'chip-hint' + (isOpen ? ' open' : ''));
+  chip.append(el('span', 'chip-hint-text', isOpen ? 'Hide details' : "Who's playing?"));
+  chip.append(el('span', 'chip-hint-arrow', '▾'));
+  return chip;
+}
+
 function statusBadge(status) {
   if (status === 'epg') return el('span', 'badge badge-confirmed', '✓ TV guide');
   if (status === 'expected') return el('span', 'badge badge-expected', 'expected time');
@@ -431,10 +438,11 @@ function renderGuide() {
     for (const c of e.channels) chips.append(channelChip(c, e.status === 'epg'));
     const badge = statusBadge(e.status);
     if (badge) chips.append(badge);
+    const hintChip = detailHintChip(isOpen);
+    chips.append(hintChip);
     info.append(chips);
 
     row.append(info);
-    row.append(el('span', 'guide-chevron', '▾'));
 
     const detail = el('div', 'guide-detail');
     detail.hidden = !isOpen;
@@ -450,6 +458,8 @@ function renderGuide() {
       const open = row.classList.toggle('open');
       row.setAttribute('aria-expanded', String(open));
       detail.hidden = !open;
+      hintChip.classList.toggle('open', open);
+      hintChip.querySelector('.chip-hint-text').textContent = open ? 'Hide details' : "Who's playing?";
       if (open) expandedGuideKeys.add(key); else expandedGuideKeys.delete(key);
     };
     row.addEventListener('click', toggle);
@@ -496,10 +506,11 @@ function sessionRow(tournamentId, session, tournamentProgrammes, wrap) {
   } else if (session.status === 'expected') {
     chips.append(el('span', 'badge badge-expected', 'expected time'));
   }
-  if (chips.childNodes.length) info.append(chips);
+  const hintChip = detailHintChip(isOpen);
+  chips.append(hintChip);
+  info.append(chips);
 
   row.append(info);
-  row.append(el('span', 'guide-chevron', '▾'));
   if (session.date < fmtIsoDate.format(new Date())) row.classList.add('session-past');
 
   const synopsis = bestSynopsis(airings);
@@ -517,6 +528,8 @@ function sessionRow(tournamentId, session, tournamentProgrammes, wrap) {
     const open = row.classList.toggle('open');
     row.setAttribute('aria-expanded', String(open));
     detail.hidden = !open;
+    hintChip.classList.toggle('open', open);
+    hintChip.querySelector('.chip-hint-text').textContent = open ? 'Hide details' : "Who's playing?";
     if (open) expandedSessionKeys.add(key); else expandedSessionKeys.delete(key);
   };
   row.addEventListener('click', toggle);
