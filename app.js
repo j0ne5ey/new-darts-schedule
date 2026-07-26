@@ -85,8 +85,12 @@ async function discoverChannels() {
 }
 
 function epgDateParam(offsetDays) {
-  const d = new Date(Date.now() + offsetDays * 86400000);
-  return fmtIsoDate.format(d).replace(/-/g, '');
+  // Step by calendar day rather than fixed 24h blocks: across the clock
+  // changes a 24h step can repeat or skip a London date, costing us a day of
+  // listings. Anchoring at midday UTC keeps us clear of the 01:00/02:00 shifts.
+  const d = new Date(`${fmtIsoDate.format(new Date())}T12:00:00Z`);
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.toISOString().slice(0, 10).replace(/-/g, '');
 }
 
 async function fetchEpg() {
@@ -140,7 +144,14 @@ async function fetchEpg() {
   return { fetchedAt: Date.now(), channels, programmes: unique };
 }
 
+let refreshInFlight = false;
+
 async function refresh(manual) {
+  // The disabled button doesn't gate pull-to-refresh, so guard here instead —
+  // two overlapping fetches would race to set `epg` and the cache.
+  if (refreshInFlight) return;
+  refreshInFlight = true;
+
   const btn = document.getElementById('refreshBtn');
   btn.classList.add('spinning');
   btn.disabled = true;
@@ -164,6 +175,7 @@ async function refresh(manual) {
         : 'Couldn’t reach the TV guide — check your connection.');
     }
   } finally {
+    refreshInFlight = false;
     btn.classList.remove('spinning');
     btn.disabled = false;
   }
@@ -422,9 +434,25 @@ function renderOnAir() {
   }
 }
 
+// The row a keyboard user is currently on, so the periodic rebuild doesn't
+// drop them back to the top of the document.
+function focusedRowKey(box) {
+  const active = document.activeElement;
+  if (!active || !active.closest || !box.contains(active)) return null;
+  const row = active.closest('[data-row-key]');
+  return row ? row.dataset.rowKey : null;
+}
+
+function restoreFocusedRow(box, key) {
+  if (!key || typeof CSS === 'undefined' || !CSS.escape) return;
+  const row = box.querySelector(`[data-row-key="${CSS.escape(key)}"]`);
+  if (row) row.focus({ preventScroll: true });
+}
+
 function renderGuide() {
   const box = document.getElementById('guide');
   const nav = document.getElementById('dayNav');
+  const keyToRefocus = focusedRowKey(box);
   box.innerHTML = '';
   nav.innerHTML = '';
 
@@ -493,6 +521,7 @@ function renderGuide() {
     const isOpen = expandedGuideKeys.has(key);
 
     const row = expandableRow('guide-row', isOpen);
+    row.dataset.rowKey = key;
     const onAirNow = e.status === 'epg' && e.ts <= now && e.end && now < e.end;
 
     const timeCol = el('div', 'guide-time');
@@ -522,6 +551,8 @@ function renderGuide() {
     dayBlock.append(row);
     dayBlock.append(attachDetailPanel(row, hintChip, e.synopsis, key, expandedGuideKeys));
   }
+
+  restoreFocusedRow(box, keyToRefocus);
 }
 
 // ---------------------------------------------------------------------------
