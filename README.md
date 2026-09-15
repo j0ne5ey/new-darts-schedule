@@ -28,8 +28,9 @@ so the browser calls it directly.
 
 ## Icons
 
-`icons/` holds the app icon — a red/white bullseye with a black dart struck in
-the bull and dashed motion arcs, on a charcoal tile.
+`icons/` holds the app icon — the target-and-dart mark from the page header,
+redrawn as vector artwork: a bullseye tilted in perspective with a visible
+disc edge, and a teal dart struck in the bull, on the app's charcoal tile.
 
 **Web (used by this site):** `favicon.svg` plus `favicon-16/32/48.png`,
 `apple-touch-icon.png` (180) with 152/167 for iPad, `icon-192/256/384/512.png`,

@@ -1,18 +1,49 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Darts TV Guide">
   <title>Darts TV Guide</title>
-  <defs><radialGradient id="bgg" cx="50%" cy="36%" r="80%"><stop offset="0" stop-color="#272c36"/><stop offset="1" stop-color="#13161d"/></radialGradient><radialGradient id="sheen" cx="34%" cy="28%" r="72%"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="0.55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></radialGradient></defs>
-  <rect width="512" height="512" rx="0.0" fill="url(#bgg)"/>
-    <ellipse cx="256.0" cy="356.4" rx="75.8" ry="13.3" fill="#000" opacity=".28"/>
-    <circle cx="256.0" cy="256.0" r="102.40" fill="#e12a32"/>
-    <circle cx="256.0" cy="256.0" r="81.92" fill="#f2f5f9"/>
-    <circle cx="256.0" cy="256.0" r="63.49" fill="#e12a32"/>
-    <circle cx="256.0" cy="256.0" r="43.01" fill="#f2f5f9"/>
-    <circle cx="256.0" cy="256.0" r="22.53" fill="#e12a32"/>
-    <circle cx="256.0" cy="256.0" r="102.40" fill="url(#sheen)"/>
-    <line x1="256.00" y1="256.00" x2="274.83" y2="237.17" stroke="#78828f" stroke-width="6.14" stroke-linecap="round"/>
-    <line x1="274.83" y1="237.17" x2="303.79" y2="208.21" stroke="#b7c0cc" stroke-width="16.90" stroke-linecap="round"/>
-    <line x1="274.83" y1="237.17" x2="303.79" y2="208.21" stroke="#e9eef4" stroke-width="5.63" stroke-linecap="round"/>
-    <line x1="303.79" y1="208.21" x2="327.68" y2="184.32" stroke="#0b0d11" stroke-width="9.22" stroke-linecap="round"/>
-    <path d="M319.72,192.28 L367.58,193.66 L416.18,143.09 L414.43,132.04 L379.96,97.57 L368.91,95.82 L318.34,144.42 Z" fill="#0b0d11" stroke="#f2f5f9" stroke-width="4.51" stroke-linejoin="round"/>
-    <line x1="319.72" y1="192.28" x2="397.20" y2="114.80" stroke="#f2f5f9" stroke-width="2.25" opacity=".45"/>
+  <defs><radialGradient id="bg" cx="50%" cy="36%" r="80%">
+      <stop offset="0" stop-color="#272c36"/><stop offset="1" stop-color="#13161d"/></radialGradient>
+    <linearGradient id="rim" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#96251e"/><stop offset="1" stop-color="#6d1a14"/></linearGradient>
+    <radialGradient id="face" cx="36%" cy="28%" r="78%">
+      <stop offset="0" stop-color="#fff" stop-opacity=".30"/>
+      <stop offset="0.52" stop-color="#fff" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity=".30"/></radialGradient>
+    <linearGradient id="barrel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#a6e0ec"/><stop offset="0.45" stop-color="#62c3d4"/>
+      <stop offset="1" stop-color="#3b8ba1"/></linearGradient>
+    <linearGradient id="vaneA" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#a6e0ec"/><stop offset="1" stop-color="#62c3d4"/></linearGradient>
+    <linearGradient id="vaneB" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#62c3d4"/><stop offset="1" stop-color="#3b8ba1"/></linearGradient></defs>
+  <rect width="512" height="512" rx="0.0" fill="url(#bg)"/>
+    <ellipse cx="256.0" cy="347.9" rx="89.9" ry="15.0" fill="#000" opacity=".30"/>
+    <g transform="translate(256.00,256.00) rotate(-13.0)">
+      <ellipse cx="0" cy="16.97" rx="99.84" ry="77.88" fill="url(#rim)"/>
+      <rect x="-99.84" y="0" width="199.68" height="16.97" fill="url(#rim)"/>
+      <g transform="scale(1,0.78)">
+        <circle cx="0" cy="0" r="99.84" fill="#c9352c"/>
+        <circle cx="0" cy="0" r="85.36" fill="#f4f1ee"/>
+        <circle cx="0" cy="0" r="85.36" fill="none" stroke="#d8d2cc" stroke-width="1.20" opacity=".6"/>
+        <circle cx="0" cy="0" r="70.39" fill="#c9352c"/>
+        <circle cx="0" cy="0" r="55.41" fill="#f4f1ee"/>
+        <circle cx="0" cy="0" r="55.41" fill="none" stroke="#d8d2cc" stroke-width="1.20" opacity=".6"/>
+        <circle cx="0" cy="0" r="40.44" fill="#c9352c"/>
+        <circle cx="0" cy="0" r="25.46" fill="#f4f1ee"/>
+        <circle cx="0" cy="0" r="25.46" fill="none" stroke="#d8d2cc" stroke-width="1.20" opacity=".6"/>
+        <circle cx="0" cy="0" r="12.48" fill="#c9352c"/>
+        <circle cx="0" cy="0" r="99.84" fill="url(#face)"/>
+      </g>
+    </g>
+    <path d="M343.71,189.91 Q372.56,211.07 394.35,206.75 Q406.45,193.23 396.33,150.25 Z" fill="url(#vaneB)" stroke="#3b8ba1" stroke-width="1.40" stroke-linejoin="round"/>
+    <path d="M343.71,189.91 Q330.33,160.98 335.46,146.12 Q355.80,134.79 396.33,150.25 Z" fill="#3b8ba1" stroke="#3b8ba1" stroke-width="1.40" stroke-linejoin="round"/>
+    <path d="M343.71,189.91 Q361.01,190.52 383.70,177.28 Q394.60,167.66 398.44,148.66 Z" fill="url(#vaneA)" stroke="#3b8ba1" stroke-width="1.40" stroke-linejoin="round"/>
+    <line x1="343.71" y1="189.91" x2="396.33" y2="150.25" stroke="#3b8ba1" stroke-width="1.60" stroke-opacity=".55"/>
+    <line x1="335.74" y1="195.91" x2="359.66" y2="177.89" stroke="#3b8ba1" stroke-width="6.19" stroke-linecap="round" stroke-opacity="1.0"/>
+    <polygon points="289.69,234.35 300.74,231.09 311.36,225.28 322.74,216.49 331.46,208.16 338.49,199.56 332.99,192.27 322.79,196.65 312.37,202.74 300.79,211.25 292.28,219.86 286.10,229.58" fill="url(#barrel)"/>
+    <line x1="309.34" y1="226.58" x2="298.98" y2="212.83" stroke="#3b8ba1" stroke-width="2.00" stroke-opacity=".65"/>
+    <line x1="317.00" y1="220.82" x2="306.63" y2="207.06" stroke="#3b8ba1" stroke-width="2.00" stroke-opacity=".65"/>
+    <line x1="324.65" y1="215.05" x2="314.29" y2="201.30" stroke="#3b8ba1" stroke-width="2.00" stroke-opacity=".65"/>
+    <line x1="299.26" y1="229.13" x2="328.49" y2="206.21" stroke="#a6e0ec" stroke-width="2.60" stroke-linecap="round" stroke-opacity=".75"/>
+    <line x1="257.59" y1="254.80" x2="289.49" y2="230.76" stroke="#b07f1c" stroke-width="4.79" stroke-linecap="round" stroke-opacity="1.0"/>
+    <line x1="257.59" y1="254.80" x2="289.49" y2="230.76" stroke="#e3ad33" stroke-width="2.80" stroke-linecap="round" stroke-opacity="1.0"/>
 </svg>
