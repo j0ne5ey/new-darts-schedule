@@ -13,10 +13,6 @@
     <line x1="274.83" y1="237.17" x2="303.79" y2="208.21" stroke="#b7c0cc" stroke-width="16.90" stroke-linecap="round"/>
     <line x1="274.83" y1="237.17" x2="303.79" y2="208.21" stroke="#e9eef4" stroke-width="5.63" stroke-linecap="round"/>
     <line x1="303.79" y1="208.21" x2="327.68" y2="184.32" stroke="#0b0d11" stroke-width="9.22" stroke-linecap="round"/>
-    <path d="M319.72,192.28 L373.98,181.46 L397.20,114.80 L330.54,138.02 Z" fill="#0b0d11" stroke="#f2f5f9" stroke-width="4.71" stroke-linejoin="round"/>
-    <line x1="319.72" y1="192.28" x2="397.20" y2="114.80" stroke="#f2f5f9" stroke-width="2.66" opacity=".65"/>
-    <line x1="319.72" y1="192.28" x2="363.55" y2="171.04" stroke="#f2f5f9" stroke-width="1.64" opacity=".30"/>
-    <line x1="397.20" y1="114.80" x2="363.55" y2="171.04" stroke="#f2f5f9" stroke-width="1.64" opacity=".30"/>
-    <line x1="319.72" y1="192.28" x2="340.96" y2="148.45" stroke="#f2f5f9" stroke-width="1.64" opacity=".30"/>
-    <line x1="397.20" y1="114.80" x2="340.96" y2="148.45" stroke="#f2f5f9" stroke-width="1.64" opacity=".30"/>
+    <path d="M319.72,192.28 L367.58,193.66 L416.18,143.09 L414.43,132.04 L379.96,97.57 L368.91,95.82 L318.34,144.42 Z" fill="#0b0d11" stroke="#f2f5f9" stroke-width="4.51" stroke-linejoin="round"/>
+    <line x1="319.72" y1="192.28" x2="397.20" y2="114.80" stroke="#f2f5f9" stroke-width="2.25" opacity=".45"/>
 </svg>

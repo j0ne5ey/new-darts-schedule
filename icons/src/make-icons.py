@@ -45,13 +45,17 @@ def arcs(cx, cy, R):
     return "\n    ".join(o)
 
 def dart(cx, cy, R, ang=-45.0, reach=1.95):
-    """Dart struck in the bull, flight out at `ang`. Bold enough to survive 60px."""
+    """Dart struck in the bull. Standard-flight silhouette: flares from the
+       shaft then runs straight back, so it stays a solid shape at 60px."""
     def P(t, perp=0.0):
         x, y = polar(cx, cy, t, ang)
         px, py = math.cos(math.radians(ang+90)), math.sin(math.radians(ang+90))
         return x + px*perp, y + py*perp
+    def pt(t, p=0.0):
+        x, y = P(t, p); return f"{x:.2f},{y:.2f}"
     TIP, B0, B1, S1 = 0.0, R*0.26, R*0.66, R*0.99
     F0, F1 = R*0.88, R*reach
+    L = F1 - F0
     o = []
     def seg(a, b, w, col, cap="round"):
         (x0, y0), (x1, y1) = P(a), P(b)
@@ -62,23 +66,15 @@ def dart(cx, cy, R, ang=-45.0, reach=1.95):
     seg(B0,  B1, R*0.055, "#e9eef4")                 # barrel highlight
     seg(B1,  S1, R*0.090, BLACK)                     # shaft
 
-    # Flight: elongated kite, solid black with a white keyline.
-    w = R*0.30
-    a, b = P(F0), P(F1)
-    u1, u2 = P(F0 + (F1 - F0)*0.42, w), P(F0 + (F1 - F0)*0.42, -w)
-    kite = (f"M{a[0]:.2f},{a[1]:.2f} L{u1[0]:.2f},{u1[1]:.2f} "
-            f"L{b[0]:.2f},{b[1]:.2f} L{u2[0]:.2f},{u2[1]:.2f} Z")
-    o.append(f'<path d="{kite}" fill="{BLACK}" stroke="{OUTLINE}" '
-             f'stroke-width="{R*0.046:.2f}" stroke-linejoin="round"/>')
-    # Fletching creases run along the flight, not across it.
-    o.append(f'<line x1="{a[0]:.2f}" y1="{a[1]:.2f}" x2="{b[0]:.2f}" y2="{b[1]:.2f}" '
-             f'stroke="{OUTLINE}" stroke-width="{R*0.026:.2f}" opacity=".65"/>')
-    for sgn in (1, -1):
-        m = P(F0 + (F1 - F0)*0.42, w*0.52*sgn)
-        o.append(f'<line x1="{a[0]:.2f}" y1="{a[1]:.2f}" x2="{m[0]:.2f}" y2="{m[1]:.2f}" '
-                 f'stroke="{OUTLINE}" stroke-width="{R*0.016:.2f}" opacity=".30"/>')
-        o.append(f'<line x1="{b[0]:.2f}" y1="{b[1]:.2f}" x2="{m[0]:.2f}" y2="{m[1]:.2f}" '
-                 f'stroke="{OUTLINE}" stroke-width="{R*0.016:.2f}" opacity=".30"/>')
+    w = R*0.34
+    d = (f"M{pt(F0)} L{pt(F0+L*0.30, w)} L{pt(F1-L*0.06, w*0.96)} "
+         f"L{pt(F1, w*0.70)} L{pt(F1,-w*0.70)} L{pt(F1-L*0.06,-w*0.96)} "
+         f"L{pt(F0+L*0.30,-w)} Z")
+    o.append(f'<path d="{d}" fill="{BLACK}" stroke="{OUTLINE}" '
+             f'stroke-width="{R*0.044:.2f}" stroke-linejoin="round"/>')
+    o.append(f'<line x1="{P(F0)[0]:.2f}" y1="{P(F0)[1]:.2f}" '
+             f'x2="{P(F1)[0]:.2f}" y2="{P(F1)[1]:.2f}" '
+             f'stroke="{OUTLINE}" stroke-width="{R*0.022:.2f}" opacity=".45"/>')
     return "\n    ".join(o)
 
 def build(path, *, size=512, R_frac=0.300, rounded=True, with_dart=True, with_arcs=True,
