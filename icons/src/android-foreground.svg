@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Darts TV Guide">
+  <title>Darts TV Guide</title>
+  <defs><radialGradient id="bgg" cx="50%" cy="36%" r="80%"><stop offset="0" stop-color="#272c36"/><stop offset="1" stop-color="#13161d"/></radialGradient><radialGradient id="sheen" cx="34%" cy="28%" r="72%"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="0.55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></radialGradient></defs>
+  <ellipse cx="256.0" cy="338.8" rx="62.5" ry="11.0" fill="#000" opacity=".28"/>
+    <circle cx="256.0" cy="256.0" r="84.48" fill="#e12a32"/>
+    <circle cx="256.0" cy="256.0" r="67.58" fill="#f2f5f9"/>
+    <circle cx="256.0" cy="256.0" r="52.38" fill="#e12a32"/>
+    <circle cx="256.0" cy="256.0" r="35.48" fill="#f2f5f9"/>
+    <circle cx="256.0" cy="256.0" r="18.59" fill="#e12a32"/>
+    <circle cx="256.0" cy="256.0" r="84.48" fill="url(#sheen)"/>
+    <line x1="256.00" y1="256.00" x2="271.53" y2="240.47" stroke="#78828f" stroke-width="5.07" stroke-linecap="round"/>
+    <line x1="271.53" y1="240.47" x2="295.43" y2="216.57" stroke="#b7c0cc" stroke-width="13.94" stroke-linecap="round"/>
+    <line x1="271.53" y1="240.47" x2="295.43" y2="216.57" stroke="#e9eef4" stroke-width="4.65" stroke-linecap="round"/>
+    <line x1="295.43" y1="216.57" x2="315.14" y2="196.86" stroke="#0b0d11" stroke-width="7.60" stroke-linecap="round"/>
+    <path d="M308.57,203.43 L353.33,194.51 L372.49,139.51 L317.49,158.67 Z" fill="#0b0d11" stroke="#f2f5f9" stroke-width="3.89" stroke-linejoin="round"/>
+    <line x1="308.57" y1="203.43" x2="372.49" y2="139.51" stroke="#f2f5f9" stroke-width="2.20" opacity=".65"/>
+    <line x1="308.57" y1="203.43" x2="344.73" y2="185.91" stroke="#f2f5f9" stroke-width="1.35" opacity=".30"/>
+    <line x1="372.49" y1="139.51" x2="344.73" y2="185.91" stroke="#f2f5f9" stroke-width="1.35" opacity=".30"/>
+    <line x1="308.57" y1="203.43" x2="326.09" y2="167.27" stroke="#f2f5f9" stroke-width="1.35" opacity=".30"/>
+    <line x1="372.49" y1="139.51" x2="326.09" y2="167.27" stroke="#f2f5f9" stroke-width="1.35" opacity=".30"/>
+</svg>

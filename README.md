@@ -28,25 +28,35 @@ so the browser calls it directly.
 
 ## Icons
 
-`icons/` holds the app icon — a dartboard with a dart in the bull, drawn in the
-app's own palette (`#0e1117` ground, `#2dd4a7` accent, `#e0455c` bull).
+`icons/` holds the app icon — a red/white bullseye with a black dart struck in
+the bull and dashed motion arcs, on a charcoal tile.
 
-| File | Used for |
+**Web (used by this site):** `favicon.svg` plus `favicon-16/32/48.png`,
+`apple-touch-icon.png` (180) with 152/167 for iPad, `icon-192/256/384/512.png`,
+and `icon-maskable-192/512.png` for Android's adaptive crop. `site.webmanifest`
+wires these up, so adding the site to a home screen gets the real icon and the
+name "Darts TV".
+
+**Native (`icons/native/`)** — not used by the website; included so the app can
+be wrapped for the stores without redoing the artwork:
+
+| Path | Contents |
 |---|---|
-| `icon.svg` | Master artwork (rounded tile) |
-| `icon-square.svg` | Square source for the Apple touch icon — iOS applies its own mask |
-| `icon-maskable.svg` | Android adaptive icon; art kept inside the 80% safe circle, no dart |
-| `favicon.svg` | Simplified bullseye mark that stays legible at 16px |
-| `apple-touch-icon.png` (180) | iOS home screen |
-| `icon-192.png`, `icon-512.png` | PWA install / Android launcher |
-| `icon-maskable-512.png` | Android adaptive crop |
-| `favicon-16.png`, `favicon-32.png` | Browser tab fallbacks |
+| `ios/AppIcon.appiconset/` | All iPhone/iPad sizes + 1024 marketing icon, with `Contents.json` — drop straight into Xcode |
+| `android/res/mipmap-*/` | `ic_launcher` at five densities, plus `ic_launcher_foreground`/`_background` adaptive layers |
+| `android/res/mipmap-anydpi-v26/` | `ic_launcher.xml` adaptive icon (with `monochrome` for themed icons) |
+| `android/playstore-512.png` | Play Store listing icon |
 
-`site.webmanifest` wires these up, so adding the site to a phone home screen
-gets the real icon and the name "Darts TV". Regenerate the SVGs with
-`python3 icons/make-icons.py icons` (see that file's header for the PNG step).
+Constraints respected: the iOS 1024 and the Apple touch icons are opaque (the
+App Store rejects alpha, and iOS applies its own mask); the Android foreground
+layer keeps its alpha; maskable art stays inside the 80% safe circle and the
+adaptive foreground inside 66.7%.
 
-## Files
+Sources and generator live in `icons/src/` — run
+`python3 icons/src/make-icons.py <outdir>` to regenerate the SVGs (see that
+file's header for the PNG step).
+
+## Files## Files
 
 | File | Purpose |
 |---|---|

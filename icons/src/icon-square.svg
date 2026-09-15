@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512" role="img" aria-label="Darts TV Guide">
+  <title>Darts TV Guide</title>
+  <defs><radialGradient id="bgg" cx="50%" cy="36%" r="80%"><stop offset="0" stop-color="#272c36"/><stop offset="1" stop-color="#13161d"/></radialGradient><radialGradient id="sheen" cx="34%" cy="28%" r="72%"><stop offset="0" stop-color="#fff" stop-opacity=".22"/><stop offset="0.55" stop-color="#fff" stop-opacity="0"/><stop offset="1" stop-color="#000" stop-opacity=".16"/></radialGradient></defs>
+  <rect width="512" height="512" rx="0.0" fill="url(#bgg)"/>
+    <path d="M169.47,418.74A184.32,184.32 0 0 1 230.35,73.47" fill="none" stroke="#8b95a3" stroke-width="8.45" stroke-dasharray="26.1 23.0" stroke-linecap="round" opacity=".85"/>
+    <path d="M325.05,85.10A184.32,184.32 0 0 1 429.20,192.96" fill="none" stroke="#8b95a3" stroke-width="8.45" stroke-dasharray="26.1 23.0" stroke-linecap="round" opacity=".55"/>
+    <ellipse cx="256.0" cy="406.5" rx="113.7" ry="20.0" fill="#000" opacity=".28"/>
+    <circle cx="256.0" cy="256.0" r="153.60" fill="#e12a32"/>
+    <circle cx="256.0" cy="256.0" r="122.88" fill="#f2f5f9"/>
+    <circle cx="256.0" cy="256.0" r="95.23" fill="#e12a32"/>
+    <circle cx="256.0" cy="256.0" r="64.51" fill="#f2f5f9"/>
+    <circle cx="256.0" cy="256.0" r="33.79" fill="#e12a32"/>
+    <circle cx="256.0" cy="256.0" r="153.60" fill="url(#sheen)"/>
+    <line x1="256.00" y1="256.00" x2="284.24" y2="227.76" stroke="#78828f" stroke-width="9.22" stroke-linecap="round"/>
+    <line x1="284.24" y1="227.76" x2="327.68" y2="184.32" stroke="#b7c0cc" stroke-width="25.34" stroke-linecap="round"/>
+    <line x1="284.24" y1="227.76" x2="327.68" y2="184.32" stroke="#e9eef4" stroke-width="8.45" stroke-linecap="round"/>
+    <line x1="327.68" y1="184.32" x2="363.53" y2="148.47" stroke="#0b0d11" stroke-width="13.82" stroke-linecap="round"/>
+    <path d="M351.58,160.42 L432.97,144.20 L467.79,44.21 L367.80,79.03 Z" fill="#0b0d11" stroke="#f2f5f9" stroke-width="7.07" stroke-linejoin="round"/>
+    <line x1="351.58" y1="160.42" x2="467.79" y2="44.21" stroke="#f2f5f9" stroke-width="3.99" opacity=".65"/>
+    <line x1="351.58" y1="160.42" x2="417.33" y2="128.56" stroke="#f2f5f9" stroke-width="2.46" opacity=".30"/>
+    <line x1="467.79" y1="44.21" x2="417.33" y2="128.56" stroke="#f2f5f9" stroke-width="2.46" opacity=".30"/>
+    <line x1="351.58" y1="160.42" x2="383.44" y2="94.67" stroke="#f2f5f9" stroke-width="2.46" opacity=".30"/>
+    <line x1="467.79" y1="44.21" x2="383.44" y2="94.67" stroke="#f2f5f9" stroke-width="2.46" opacity=".30"/>
+</svg>
