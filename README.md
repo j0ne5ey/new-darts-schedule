@@ -26,6 +26,26 @@ finalises this close to the day. The site handles that honestly, in two layers:
 No backend, no build step — the EPG API sends `Access-Control-Allow-Origin: *`,
 so the browser calls it directly.
 
+## Icons
+
+`icons/` holds the app icon — a dartboard with a dart in the bull, drawn in the
+app's own palette (`#0e1117` ground, `#2dd4a7` accent, `#e0455c` bull).
+
+| File | Used for |
+|---|---|
+| `icon.svg` | Master artwork (rounded tile) |
+| `icon-square.svg` | Square source for the Apple touch icon — iOS applies its own mask |
+| `icon-maskable.svg` | Android adaptive icon; art kept inside the 80% safe circle, no dart |
+| `favicon.svg` | Simplified bullseye mark that stays legible at 16px |
+| `apple-touch-icon.png` (180) | iOS home screen |
+| `icon-192.png`, `icon-512.png` | PWA install / Android launcher |
+| `icon-maskable-512.png` | Android adaptive crop |
+| `favicon-16.png`, `favicon-32.png` | Browser tab fallbacks |
+
+`site.webmanifest` wires these up, so adding the site to a phone home screen
+gets the real icon and the name "Darts TV". Regenerate the SVGs with
+`python3 icons/make-icons.py icons` (see that file's header for the PNG step).
+
 ## Files
 
 | File | Purpose |
